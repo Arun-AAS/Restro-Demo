@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Restaurant Management Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+:root{
+  --parchment:  #faf6f0;
+  --linen:      #f3ece0;
+  --linen2:     #ece2d0;
+  --linen3:     #e0d4bc;
+  --border:     #d4c4a8;
+  --borderl:    #c4b090;
+  --ink:        #2c2018;
+  --ink2:       #4a3828;
+  --muted:      #8a7258;
+  --fog:        #b8a888;
+  --terra:      #b85c38;
+  --terra2:     #d4784a;
+  --terral:     #f0e8e0;
+  --green:      #2d5440;
+  --greenl:     #3d6e52;
+  --greenll:    #edf4f0;
+  --brass:      #9a7a3a;
+  --brass2:     #c4a050;
+  --brassl:     #f8f2e4;
+  --ff-d: 'Cormorant Garamond', Georgia, serif;
+  --ff-b: 'DM Sans', sans-serif;
+  --ease: cubic-bezier(.4,0,.2,1);
+  --shadow: 0 2px 20px rgba(44,32,24,.08);
+  --shadow2: 0 8px 40px rgba(44,32,24,.12);
+}
+
+body{
+  background: var(--parchment);
+  color: var(--ink);
+  font-family: var(--ff-b);
+  font-weight: 300;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* subtle linen texture overlay */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slowSpin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+
+/* ══════════════════════════════════
+   HERO
+══════════════════════════════════ */
+.hero{
+  position:relative;
+  background: linear-gradient(160deg, #fdf8f0 0%, #f5ebe0 40%, #efe0cc 100%);
+  min-height: 100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;
+  padding: 80px 40px 100px;
+  overflow:hidden;
+  border-bottom: 1px solid var(--border);
+}
+
+/* large background watermark text */
+.hero-watermark{
+  position:absolute;
+  font-family: var(--ff-d);
+  font-size: 28vw;
+  font-weight: 300;
+  font-style: italic;
+  color: rgba(154,122,58,.06);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+  white-space: nowrap;
+  line-height: 1;
+  user-select: none;
+}
+
+/* decorative circle ring */
+.hero-ring{
+  position:absolute;top:50%;left:50%;
+  width:70vmin;height:70vmin;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  animation: slowSpin 180s linear infinite;
+  opacity: .12;
+}
+
+.hero-badge{
+  display:inline-flex;align-items:center;gap:14px;
+  margin-bottom:40px;
+  animation: fadeUp .7s var(--ease) both;
+}
+.hb-line{width:40px;height:1px;background:var(--brass)}
+.hb-text{
+  font-family:var(--ff-b);font-size:11px;font-weight:400;
+  letter-spacing:.28em;text-transform:uppercase;color:var(--brass);
+}
+
+.hero-plate-wrap{
+  margin-bottom:32px;
+  animation: float 6s ease-in-out infinite, fadeIn .9s .2s both;
+}
+
+.hero-title{
+  font-family:var(--ff-d);
+  font-weight:300;
+  line-height:.92;
+  letter-spacing:-.01em;
+  margin-bottom:8px;
+  animation: fadeUp .9s .1s var(--ease) both;
+}
+.hero-title .the{
+  display:block;
+  font-size: clamp(1.4rem,3.5vw,2.8rem);
+  font-style:italic;
+  color:var(--muted);
+  letter-spacing:.08em;
+  margin-bottom: 6px;
+}
+.hero-title .restaurant{
+  display:block;
+  font-size: clamp(4rem,10vw,9rem);
+  font-style:italic;
+  color:var(--terra);
+  line-height:.9;
+}
+.hero-title .management{
+  display:block;
+  font-size:clamp(1.5rem,4vw,3.4rem);
+  font-weight:600;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--green);
+  margin-top:8px;
+}
+.hero-title .engine{
+  display:block;
+  font-size:clamp(1.5rem,4vw,3.4rem);
+  font-weight:600;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--green);
+}
+
+.hero-ornament{
+  display:flex;align-items:center;gap:12px;
+  margin:28px auto;
+  width:260px;
+  animation:fadeIn .8s .4s both;
+}
+.ho-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--brass),transparent)}
+.ho-dia{width:6px;height:6px;background:var(--brass);transform:rotate(45deg);flex-shrink:0}
+
+.hero-sub{
+  max-width:440px;font-size:15px;color:var(--muted);line-height:1.9;
+  margin:0 auto;
+  animation: fadeUp .8s .5s var(--ease) both;
+}
+
+/* hero corner decorations */
+.hero-corner{
+  position:absolute;
+  width:100px;height:100px;
+  opacity:.18;
+}
+.hero-corner.tl{top:40px;left:40px}
+.hero-corner.tr{top:40px;right:40px;transform:scaleX(-1)}
+.hero-corner.bl{bottom:40px;left:40px;transform:scaleY(-1)}
+.hero-corner.br{bottom:40px;right:40px;transform:scale(-1)}
+
+/* ══════════════════════════════════
+   SECTIONS
+══════════════════════════════════ */
+.sec{
+  padding:96px 80px;
+  border-bottom:1px solid var(--border);
+  background:var(--parchment);
+  position:relative;
+}
+.sec.alt{ background: var(--linen) }
+.sec.alt2{ background: #f8f4ee }
+
+.sh{text-align:center;margin-bottom:64px}
+.sh-eyebrow{
+  font-family:var(--ff-b);font-size:10px;font-weight:400;
+  letter-spacing:.3em;text-transform:uppercase;
+  color:var(--brass);margin-bottom:12px;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+}
+.sh-eyebrow::before,.sh-eyebrow::after{content:'';width:30px;height:1px;background:var(--brass)}
+.sh-title{
+  font-family:var(--ff-d);
+  font-size:clamp(2rem,3.5vw,3rem);
+  font-weight:300;color:var(--ink);
+}
+.sh-title em{font-style:italic;color:var(--terra)}
+.sh-rule{width:60px;height:2px;background:var(--terra);margin:16px auto 0;opacity:.4}
+
+/* ══════════════════════════════════
+   AXIOM
+══════════════════════════════════ */
+.axiom{
+  max-width:800px;margin:0 auto;
+  background:var(--green);
+  padding:52px 60px;
+  position:relative;overflow:hidden;
+  box-shadow: var(--shadow2);
+}
+.axiom::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--brass),var(--brass2),var(--brass));
+}
+/* subtle leaf pattern in bg */
+.axiom::after{
+  content:'❧';
+  position:absolute;right:40px;bottom:30px;
+  font-size:80px;color:rgba(255,255,255,.04);
+  pointer-events:none;
+}
+.axiom-label{
+  font-family:var(--ff-b);font-size:10px;font-weight:400;
+  letter-spacing:.3em;text-transform:uppercase;
+  color:rgba(196,160,80,.8);margin-bottom:18px;
+}
+.axiom-quote{
+  font-family:var(--ff-d);
+  font-size:clamp(1.2rem,2.2vw,1.75rem);
+  font-weight:300;font-style:italic;
+  line-height:1.55;
+  color:#f0ece4;
+  margin-bottom:32px;
+}
+.axiom-quote strong{color:var(--brass2);font-style:normal;font-weight:400}
+.axiom-tags{display:flex;flex-wrap:wrap;gap:10px}
+.at{padding:7px 18px;font-size:12px;font-weight:400;letter-spacing:.05em}
+.at-y{background:rgba(196,160,80,.18);border:1px solid rgba(196,160,80,.4);color:var(--brass2)}
+.at-n{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.3);text-decoration:line-through}
+
+/* ══════════════════════════════════
+   PHASE RAIL
+══════════════════════════════════ */
+.phase-rail{
+  display:grid;grid-template-columns:repeat(6,1fr);
+  border:1px solid var(--border);
+  background:white;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.ph{
+  padding:32px 16px;text-align:center;
+  border-right:1px solid var(--border);
+  position:relative;transition:background .3s;cursor:default;
+}
+.ph:last-child{border-right:none}
+.ph:hover{background:var(--terral)}
+.ph::after{
+  content:'';position:absolute;
+  bottom:0;left:0;right:0;height:3px;
+  background:transparent;transition:background .4s;
+}
+.ph:hover::after{background:var(--terra)}
+.ph-n{
+  font-family:var(--ff-d);font-style:italic;
+  font-size:11px;color:var(--brass);margin-bottom:12px;
+}
+.ph-ico{margin:0 auto 12px;display:block}
+.ph-lbl{font-size:10px;font-weight:400;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+
+/* ══════════════════════════════════
+   3 FLOW CARDS
+══════════════════════════════════ */
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.fcard{
+  background:white;
+  border:1px solid var(--border);
+  padding:40px 36px;
+  position:relative;overflow:hidden;
+  transition:box-shadow .3s,transform .3s;
+  box-shadow:var(--shadow);
+}
+.fcard:hover{box-shadow:var(--shadow2);transform:translateY(-4px)}
+.fcard::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+}
+.fcard:nth-child(1)::before{background:var(--terra)}
+.fcard:nth-child(2)::before{background:var(--green)}
+.fcard:nth-child(3)::before{background:var(--brass)}
+.fcard:nth-child(1){animation:fadeUp .6s .05s both}
+.fcard:nth-child(2){animation:fadeUp .6s .15s both}
+.fcard:nth-child(3){animation:fadeUp .6s .25s both}
+.fc-num{
+  font-family:var(--ff-b);font-size:10px;font-weight:400;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:var(--fog);margin-bottom:12px;
+}
+.fc-title{
+  font-family:var(--ff-d);font-size:1.4rem;font-weight:400;
+  line-height:1.2;margin-bottom:20px;color:var(--ink);
+}
+.fc-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.fc-list li{
+  display:flex;gap:10px;align-items:flex-start;
+  font-size:13.5px;color:var(--muted);
+}
+.fc-list li::before{
+  content:'';
+  width:4px;height:4px;
+  background:var(--border);
+  border-radius:50%;flex-shrink:0;
+  margin-top:8px;
+}
+
+/* ══════════════════════════════════
+   SCENARIOS
+══════════════════════════════════ */
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--border);background:var(--border)}
+.scard{
+  background:white;
+  overflow:hidden;
+  transition:background .25s;
+}
+.scard:hover{background:#fffcf8}
+.scard:nth-child(1){animation:fadeUp .6s .08s both}
+.scard:nth-child(2){animation:fadeUp .6s .18s both}
+.scard:nth-child(3){animation:fadeUp .6s .28s both}
+.sc-head{
+  padding:28px 30px 22px;
+  border-bottom:1px solid var(--border);
+}
+.sc-tag{
+  font-size:10px;font-weight:500;
+  letter-spacing:.22em;text-transform:uppercase;
+  display:block;margin-bottom:8px;
+}
+.scard:nth-child(1) .sc-tag{color:var(--terra)}
+.scard:nth-child(2) .sc-tag{color:var(--green)}
+.scard:nth-child(3) .sc-tag{color:var(--brass)}
+.sc-title{font-family:var(--ff-d);font-size:1.2rem;font-weight:400;line-height:1.3;color:var(--ink)}
+.sc-body{padding:24px 30px}
+.sstep{display:flex;gap:14px;padding:11px 0;border-bottom:1px solid #f0ebe2;align-items:flex-start}
+.sstep:last-child{border-bottom:none}
+.ss-i{
+  font-family:var(--ff-d);font-style:italic;font-size:12px;
+  min-width:26px;padding-top:2px;flex-shrink:0;font-weight:400;
+}
+.scard:nth-child(1) .ss-i{color:var(--terra)}
+.scard:nth-child(2) .ss-i{color:var(--green)}
+.scard:nth-child(3) .ss-i{color:var(--brass)}
+.ss-t strong{display:block;font-size:13.5px;font-weight:400;color:var(--ink);margin-bottom:2px}
+.ss-t span{font-size:12px;color:var(--fog)}
+
+/* ══════════════════════════════════
+   KITCHEN LIFECYCLE
+══════════════════════════════════ */
+.klife{
+  display:flex;
+  background:white;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.ks{
+  flex:1;padding:44px 16px;text-align:center;
+  border-right:1px solid var(--border);
+  position:relative;transition:background .3s;
+}
+.ks:last-child{border-right:none}
+.ks:hover{background:var(--greenll)}
+.ks::before{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:transparent;transition:background .3s;
+}
+.ks:hover::before{background:var(--green)}
+.ks:not(:last-child)::after{
+  content:'›';
+  position:absolute;right:-10px;top:50%;transform:translateY(-50%);
+  color:var(--fog);font-size:18px;z-index:2;
+}
+.ks-ico{margin:0 auto 16px;display:block}
+.ks-name{font-family:var(--ff-d);font-size:1rem;font-weight:400;margin-bottom:5px;color:var(--ink)}
+.ks-desc{font-size:11px;color:var(--fog);letter-spacing:.04em}
+
+/* ══════════════════════════════════
+   AUTHORITY TABLE
+══════════════════════════════════ */
+.atable{
+  border:1px solid var(--border);overflow:hidden;
+  background:white;box-shadow:var(--shadow);
+}
+.atr{display:grid;grid-template-columns:1fr 2fr 1fr;border-bottom:1px solid var(--border);transition:background .2s}
+.atr:last-child{border-bottom:none}
+.atr:not(.hdr):hover{background:#fdfaf5}
+.atr.hdr{background:var(--green);pointer-events:none}
+.atc{padding:18px 28px;border-right:1px solid var(--border);font-size:13.5px;display:flex;align-items:center;color:var(--ink2)}
+.atc:last-child{border-right:none}
+.atr.hdr .atc{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.85);font-weight:400}
+.badge{display:inline-block;padding:4px 14px;font-size:11px;font-weight:400;letter-spacing:.06em;border-radius:2px}
+.b-y{background:var(--greenll);color:var(--green);border:1px solid rgba(45,84,64,.25)}
+.b-n{background:#fdf0ee;color:var(--terra);border:1px solid rgba(184,92,56,.2)}
+
+/* ══════════════════════════════════
+   BILLING CARD
+══════════════════════════════════ */
+.bcenter{
+  max-width:700px;margin:0 auto;
+  background:white;
+  border:1px solid var(--border);
+  padding:52px 56px;
+  position:relative;overflow:hidden;
+  text-align:center;
+  box-shadow:var(--shadow2);
+}
+.bcenter::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--terra),var(--brass),var(--green));
+}
+.bc-title{font-family:var(--ff-d);font-size:2rem;font-weight:300;color:var(--ink);margin-bottom:8px}
+.bc-sub{font-size:13px;color:var(--muted);margin-bottom:32px}
+.bc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;text-align:left;margin-bottom:30px}
+.bc-item{background:var(--linen);border:1px solid var(--border);padding:14px 18px;display:flex;gap:10px;align-items:center}
+.bc-dot{width:5px;height:5px;background:var(--terra);border-radius:50%;flex-shrink:0}
+.bc-text{font-size:13px;color:var(--muted)}
+.bc-ch{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.bch{
+  padding:9px 22px;font-size:12px;font-weight:400;
+  letter-spacing:.1em;text-transform:uppercase;
+  border:1px solid var(--border);color:var(--ink2);
+  background:var(--linen);transition:background .2s,color .2s;
+  cursor:default;
+}
+.bch:hover{background:var(--green);color:white;border-color:var(--green)}
+
+/* ══════════════════════════════════
+   CONFLICT GRID
+══════════════════════════════════ */
+.cgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.ci{
+  background:white;border:1px solid var(--border);
+  padding:24px 22px;
+  display:flex;gap:14px;align-items:flex-start;
+  transition:box-shadow .2s,transform .2s;
+  box-shadow:var(--shadow);
+}
+.ci:hover{box-shadow:var(--shadow2);transform:translateY(-2px)}
+.ci-chk{
+  width:28px;height:28px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--greenll);
+  border:1px solid rgba(45,84,64,.2);
+  color:var(--green);font-size:13px;margin-top:2px;
+}
+.ci-txt{font-size:13px;color:var(--muted);line-height:1.5}
+
+/* ══════════════════════════════════
+   TIMELINE
+══════════════════════════════════ */
+.tl{border:1px solid var(--border);background:white;overflow:hidden;box-shadow:var(--shadow)}
+.tli{
+  display:grid;grid-template-columns:70px 1fr;
+  border-bottom:1px solid #f0ebe0;transition:background .2s;
+}
+.tli:last-child{border-bottom:none}
+.tli:hover{background:#fdfaf5}
+.tl-n{
+  font-family:var(--ff-d);font-style:italic;
+  font-size:14px;color:var(--brass);
+  padding:20px 0 20px 28px;
+  border-right:1px solid var(--border);
+  display:flex;align-items:center;
+}
+.tl-c{padding:16px 32px}
+.tl-t{font-family:var(--ff-d);font-size:1.05rem;font-weight:400;color:var(--ink);margin-bottom:3px}
+.tl-d{font-size:12px;color:var(--fog)}
+
+/* ══════════════════════════════════
+   FOOTER
+══════════════════════════════════ */
+footer{
+  background:var(--green);
+  padding:56px 80px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.ft-brand{font-family:var(--ff-d);font-size:1.4rem;font-weight:300;color:rgba(255,255,255,.9)}
+.ft-brand em{font-style:italic;color:var(--brass2)}
+.ft-divider svg{opacity:.3}
+.ft-meta{font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.12em;text-align:right;line-height:1.8}
+
+/* ══════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════ */
+@media(max-width:1024px){
+  .sec{padding:64px 32px}
+  .cgrid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:768px){
+  .sec{padding:56px 20px}
+  .hero{padding:60px 20px 80px}
+  .hero-corner{display:none}
+  .phase-rail{grid-template-columns:repeat(3,1fr)}
+  .cards3{grid-template-columns:1fr;gap:16px}
+  .sgrid{grid-template-columns:1fr;background:transparent;border:none;gap:16px}
+  .scard{border:1px solid var(--border)}
+  .klife{flex-direction:column}.ks{border-right:none;border-bottom:1px solid var(--border)}.ks::after{display:none}
+  .atr{grid-template-columns:1fr}
+  .bc-grid{grid-template-columns:1fr}
+  .cgrid{grid-template-columns:1fr}
+  footer{flex-direction:column;gap:20px;padding:40px 20px;text-align:center}
+  .ft-meta{text-align:center}
+  .axiom{padding:36px 24px}
+  .bcenter{padding:36px 24px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+
+  <div class="hero-watermark">R</div>
+
+  <!-- spinning ornament ring -->
+  <svg class="hero-ring" viewBox="0 0 500 500" fill="none">
+    <circle cx="250" cy="250" r="240" stroke="#9a7a3a" stroke-width=".6" stroke-dasharray="4 14"/>
+    <circle cx="250" cy="250" r="190" stroke="#9a7a3a" stroke-width=".4" stroke-dasharray="2 9"/>
+    <circle cx="250" cy="250" r="140" stroke="#9a7a3a" stroke-width=".6" stroke-dasharray="5 16"/>
+    <polygon points="250,7 254,12 250,17 246,12" fill="#9a7a3a"/>
+    <polygon points="493,250 488,254 483,250 488,246" fill="#9a7a3a"/>
+    <polygon points="250,493 254,488 250,483 246,488" fill="#9a7a3a"/>
+    <polygon points="7,250 12,254 17,250 12,246" fill="#9a7a3a"/>
+    <polygon points="425,75 429,80 425,85 421,80" fill="#9a7a3a" opacity=".5"/>
+    <polygon points="425,425 429,420 425,415 421,420" fill="#9a7a3a" opacity=".5"/>
+    <polygon points="75,425 79,420 75,415 71,420" fill="#9a7a3a" opacity=".5"/>
+    <polygon points="75,75 79,80 75,85 71,80" fill="#9a7a3a" opacity=".5"/>
+  </svg>
+
+  <!-- corner flourishes -->
+  <svg class="hero-corner tl" viewBox="0 0 100 100" fill="none">
+    <path d="M10 10 L40 10 M10 10 L10 40" stroke="#9a7a3a" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M20 10 Q20 20 10 20" stroke="#9a7a3a" stroke-width=".8" fill="none" opacity=".5"/>
+    <circle cx="10" cy="10" r="2" fill="#9a7a3a" opacity=".5"/>
+  </svg>
+  <svg class="hero-corner tr" viewBox="0 0 100 100" fill="none">
+    <path d="M10 10 L40 10 M10 10 L10 40" stroke="#9a7a3a" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M20 10 Q20 20 10 20" stroke="#9a7a3a" stroke-width=".8" fill="none" opacity=".5"/>
+    <circle cx="10" cy="10" r="2" fill="#9a7a3a" opacity=".5"/>
+  </svg>
+  <svg class="hero-corner bl" viewBox="0 0 100 100" fill="none">
+    <path d="M10 10 L40 10 M10 10 L10 40" stroke="#9a7a3a" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M20 10 Q20 20 10 20" stroke="#9a7a3a" stroke-width=".8" fill="none" opacity=".5"/>
+    <circle cx="10" cy="10" r="2" fill="#9a7a3a" opacity=".5"/>
+  </svg>
+  <svg class="hero-corner br" viewBox="0 0 100 100" fill="none">
+    <path d="M10 10 L40 10 M10 10 L10 40" stroke="#9a7a3a" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M20 10 Q20 20 10 20" stroke="#9a7a3a" stroke-width=".8" fill="none" opacity=".5"/>
+    <circle cx="10" cy="10" r="2" fill="#9a7a3a" opacity=".5"/>
+  </svg>
+
+  <!-- Restaurant scene illustration -->
+  <div class="hero-plate-wrap">
+    <svg width="240" height="210" viewBox="0 0 240 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="plate-g" cx="38%" cy="32%" r="65%">
+          <stop offset="0%" stop-color="#fff8f0"/>
+          <stop offset="100%" stop-color="#f0e4d0"/>
+        </radialGradient>
+        <radialGradient id="plate-i" cx="40%" cy="35%" r="60%">
+          <stop offset="0%" stop-color="#fefaf4"/>
+          <stop offset="100%" stop-color="#f5ece0"/>
+        </radialGradient>
+        <linearGradient id="silver-g" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#c4b090"/>
+          <stop offset="45%" stop-color="#f0e8d8"/>
+          <stop offset="100%" stop-color="#c4b090"/>
+        </linearGradient>
+        <radialGradient id="table-g" cx="50%" cy="30%">
+          <stop offset="0%" stop-color="#e8dcc8"/>
+          <stop offset="100%" stop-color="#d4c4a0"/>
+        </radialGradient>
+        <linearGradient id="candle-g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#f8e060"/>
+          <stop offset="60%" stop-color="#e09020"/>
+          <stop offset="100%" stop-color="#a05010"/>
+        </linearGradient>
+        <linearGradient id="wine-g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="rgba(150,30,50,.15)"/>
+          <stop offset="100%" stop-color="rgba(150,30,50,.35)"/>
+        </linearGradient>
+      </defs>
+
+      <!-- table surface -->
+      <ellipse cx="120" cy="185" rx="108" ry="22" fill="url(#table-g)" stroke="#c4b090" stroke-width="1"/>
+      <ellipse cx="120" cy="183" rx="104" ry="19" fill="none" stroke="rgba(154,122,58,.2)" stroke-width=".6"/>
+
+      <!-- table cloth suggestion -->
+      <ellipse cx="120" cy="178" rx="100" ry="16" fill="rgba(255,255,255,.4)"/>
+
+      <!-- plate shadow -->
+      <ellipse cx="120" cy="168" rx="60" ry="11" fill="rgba(44,32,24,.1)"/>
+
+      <!-- plate outer ring -->
+      <circle cx="120" cy="115" r="68" fill="url(#plate-g)" stroke="#c4b090" stroke-width="1.5"/>
+      <!-- plate decorative ring 1 -->
+      <circle cx="120" cy="115" r="58" fill="none" stroke="rgba(154,122,58,.3)" stroke-width=".8"/>
+      <!-- plate inner ring -->
+      <circle cx="120" cy="115" r="50" fill="none" stroke="rgba(154,122,58,.15)" stroke-width=".4"/>
+      <!-- plate well -->
+      <circle cx="120" cy="115" r="44" fill="url(#plate-i)"/>
+
+      <!-- food on plate - elegant arrangement -->
+      <ellipse cx="120" cy="119" rx="20" ry="12" fill="rgba(184,92,56,.08)" stroke="rgba(184,92,56,.2)" stroke-width=".7"/>
+      <path d="M108 113 Q116 104 126 113 Q133 121 122 126 Q111 130 108 113Z" fill="rgba(184,92,56,.1)" stroke="rgba(184,92,56,.22)" stroke-width=".7"/>
+      <path d="M120 107 Q127 100 134 108 Q138 116 130 119 Q121 115 120 107Z" fill="rgba(100,60,20,.08)" stroke="rgba(154,122,58,.2)" stroke-width=".5"/>
+      <!-- garnish dots -->
+      <circle cx="116" cy="110" r="1.8" fill="rgba(45,84,64,.35)"/>
+      <circle cx="125" cy="108" r="1.4" fill="rgba(45,84,64,.3)"/>
+      <circle cx="130" cy="115" r="1.2" fill="rgba(45,84,64,.25)"/>
+      <circle cx="113" cy="118" r="1" fill="rgba(45,84,64,.2)"/>
+
+      <!-- sauce swirl -->
+      <path d="M118 122 Q124 118 128 122 Q132 126 126 128" stroke="rgba(184,92,56,.25)" stroke-width=".9" fill="none" stroke-linecap="round"/>
+
+      <!-- fork -->
+      <g transform="translate(34,46)">
+        <rect x="9.5" y="4" width="2" height="72" rx="1" fill="url(#silver-g)"/>
+        <rect x="4.5" y="4" width="1.5" height="19" rx=".75" fill="url(#silver-g)"/>
+        <rect x="9.5" y="4" width="1.5" height="21" rx=".75" fill="url(#silver-g)"/>
+        <rect x="14.5" y="4" width="1.5" height="19" rx=".75" fill="url(#silver-g)"/>
+        <rect x="4.5" y="21" width="11" height="1.5" rx=".75" fill="url(#silver-g)"/>
+        <!-- handle detail -->
+        <ellipse cx="10.5" cy="68" rx="3" ry="1.5" fill="none" stroke="rgba(154,122,58,.3)" stroke-width=".6"/>
+      </g>
+
+      <!-- knife -->
+      <g transform="translate(182,46)">
+        <rect x="8" y="4" width="2" height="72" rx="1" fill="url(#silver-g)"/>
+        <path d="M10 4 L17 16 L10 28 Z" fill="url(#silver-g)"/>
+        <ellipse cx="9" cy="68" rx="2.5" ry="1.5" fill="none" stroke="rgba(154,122,58,.3)" stroke-width=".6"/>
+      </g>
+
+      <!-- wine glass left -->
+      <g transform="translate(18,42)" opacity=".55">
+        <path d="M16 2 C16 14 7 26 3 34 L29 34 C25 26 16 14 16 2Z" stroke="#9a7a3a" stroke-width=".9" fill="none"/>
+        <!-- wine fill -->
+        <path d="M7 28 C8 26 24 26 25 28 L29 34 L3 34 Z" fill="url(#wine-g)"/>
+        <line x1="16" y1="34" x2="16" y2="54" stroke="#9a7a3a" stroke-width=".9"/>
+        <ellipse cx="16" cy="54" rx="8" ry="2" stroke="#9a7a3a" stroke-width=".9" fill="none"/>
+      </g>
+
+      <!-- candle right -->
+      <g transform="translate(186,36)" opacity=".7">
+        <rect x="8" y="22" width="9" height="34" rx="1.5" fill="#f0e8d8" stroke="#c4b090" stroke-width=".7"/>
+        <!-- wax drip -->
+        <path d="M8 28 Q5 32 7 36" stroke="#e8dcc8" stroke-width="1" fill="none"/>
+        <!-- flame -->
+        <path d="M12.5 2 C10 8 7 11 8.5 16 C9.5 19.5 12.5 22 12.5 22 C12.5 22 15.5 19.5 16.5 16 C18 11 15 8 12.5 2Z" fill="url(#candle-g)"/>
+        <ellipse cx="12.5" cy="4" rx="2.5" ry="3.5" fill="rgba(255,240,140,.4)"/>
+        <!-- glow -->
+        <ellipse cx="12.5" cy="16" rx="8" ry="6" fill="rgba(255,200,80,.06)"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="hero-badge">
+    <div class="hb-line"></div>
+    <span class="hb-text">System Architecture — Unified Order Flow</span>
+    <div class="hb-line"></div>
+  </div>
+
+  <h1 class="hero-title">
+    <span class="the">The</span>
+    <span class="restaurant">Restaurant</span>
+    <span class="management">Management</span>
+    <span class="engine">Engine</span>
+  </h1>
+
+  <div class="hero-ornament">
+    <div class="ho-line"></div>
+    <div class="ho-dia"></div>
+    <div class="ho-line"></div>
+  </div>
+
+  <p class="hero-sub">
+    A zero-conflict architecture governing every order — from table scan to final bill — across self-service, waiter-assisted, online and cash flows.
+  </p>
+
+</section>
+
+<!-- ══ I. AXIOM ══ -->
+<section class="sec alt">
+  <div class="sh">
+    <div class="sh-eyebrow">I</div>
+    <h2 class="sh-title">The <em>Governing Axiom</em></h2>
+    <div class="sh-rule"></div>
+  </div>
+  <div class="axiom">
+    <div class="axiom-label">Non-Negotiable Rule</div>
+    <p class="axiom-quote">
+      The kitchen receives only orders where payment status is <strong>Confirmed</strong>. Every other state remains invisible to the kitchen — without exception.
+    </p>
+    <div class="axiom-tags">
+      <span class="at at-y">✦ &nbsp;Payment Gateway Verified</span>
+      <span class="at at-y">✦ &nbsp;Cashier Confirmed</span>
+      <span class="at at-n">Screenshot Shown</span>
+      <span class="at at-n">Waiter Marked Paid</span>
+      <span class="at at-n">Customer Promise</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══ II. PHASES ══ -->
+<section class="sec">
+  <div class="sh">
+    <div class="sh-eyebrow">II</div>
+    <h2 class="sh-title">The <em>Six Phases</em></h2>
+    <div class="sh-rule"></div>
+  </div>
+  <div class="phase-rail">
+
+    <div class="ph">
+      <div class="ph-n">i</div>
+      <svg class="ph-ico" width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <rect x="3" y="3" width="12" height="12" rx="1" stroke="#9a7a3a" stroke-width="1.1" fill="none"/>
+        <rect x="6" y="6" width="6" height="6" fill="#9a7a3a" opacity=".4"/>
+        <rect x="21" y="3" width="12" height="12" rx="1" stroke="#9a7a3a" stroke-width="1.1" fill="none"/>
+        <rect x="24" y="6" width="6" height="6" fill="#9a7a3a" opacity=".4"/>
+        <rect x="3" y="21" width="12" height="12" rx="1" stroke="#9a7a3a" stroke-width="1.1" fill="none"/>
+        <rect x="6" y="24" width="6" height="6" fill="#9a7a3a" opacity=".4"/>
+        <rect x="21" y="21" width="4" height="4" fill="#9a7a3a" opacity=".4"/>
+        <rect x="27" y="21" width="4" height="4" fill="#9a7a3a" opacity=".4"/>
+        <rect x="30" y="27" width="3" height="6" fill="#9a7a3a" opacity=".4"/>
+        <rect x="21" y="28" width="7" height="3" fill="#9a7a3a" opacity=".4"/>
+      </svg>
+      <div class="ph-lbl">Session</div>
+    </div>
+
+    <div class="ph">
+      <div class="ph-n">ii</div>
+      <svg class="ph-ico" width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <path d="M3 5 L7 5 L12 22 L29 22 L33 10 L10 10" stroke="#9a7a3a" stroke-width="1.1" stroke-linecap="round" fill="none"/>
+        <circle cx="14" cy="28" r="2.8" stroke="#9a7a3a" stroke-width="1.1" fill="none"/>
+        <circle cx="26" cy="28" r="2.8" stroke="#9a7a3a" stroke-width="1.1" fill="none"/>
+        <line x1="16" y1="14" x2="16" y2="20" stroke="#9a7a3a" stroke-width=".9" opacity=".4"/>
+        <line x1="22" y1="14" x2="22" y2="20" stroke="#9a7a3a" stroke-width=".9" opacity=".4"/>
+        <line x1="28" y1="14" x2="27" y2="20" stroke="#9a7a3a" stroke-width=".9" opacity=".4"/>
+      </svg>
+      <div class="ph-lbl">Order</div>
+    </div>
+
+    <div class="ph">
+      <div class="ph-n">iii</div>
+      <svg class="ph-ico" width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <rect x="3" y="9" width="30" height="18" rx="2" stroke="#9a7a3a" stroke-width="1.1" fill="none"/>
+        <rect x="3" y="14" width="30" height="4" fill="#9a7a3a" opacity=".1"/>
+        <line x1="3" y1="14" x2="33" y2="14" stroke="#9a7a3a" stroke-width=".9" opacity=".35"/>
+        <rect x="7" y="21" width="7" height="2" rx="1" fill="#9a7a3a" opacity=".4"/>
+        <circle cx="26" cy="19" r="4" fill="none" stroke="#9a7a3a" stroke-width="1"/>
+        <polyline points="24,19 25.5,21 29,17" stroke="#9a7a3a" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="ph-lbl">Payment</div>
+    </div>
+
+    <div class="ph">
+      <div class="ph-n">iv</div>
+      <svg class="ph-ico" width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <ellipse cx="18" cy="29" rx="13" ry="5" stroke="#9a7a3a" stroke-width="1.1" fill="none"/>
+        <path d="M5 29 C5 21 9 13 14 13 C14 9 16 7 18 7 C20 7 22 9 22 13 C27 13 31 21 31 29" stroke="#9a7a3a" stroke-width="1.1" fill="none"/>
+        <line x1="5" y1="25" x2="31" y2="25" stroke="#9a7a3a" stroke-width=".7" stroke-dasharray="3 3" opacity=".4"/>
+        <circle cx="18" cy="13" r="2.5" fill="none" stroke="#9a7a3a" stroke-width=".9" opacity=".5"/>
+      </svg>
+      <div class="ph-lbl">Kitchen</div>
+    </div>
+
+    <div class="ph">
+      <div class="ph-n">v</div>
+      <svg class="ph-ico" width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <ellipse cx="18" cy="29" rx="14" ry="3.5" stroke="#9a7a3a" stroke-width="1.1" fill="none"/>
+        <path d="M4 29 C4 18 10 10 18 10 C26 10 32 18 32 29" stroke="#9a7a3a" stroke-width="1.1" fill="none"/>
+        <ellipse cx="18" cy="10" rx="4" ry="2" fill="none" stroke="#9a7a3a" stroke-width=".8" opacity=".4"/>
+        <line x1="18" y1="8" x2="18" y2="5" stroke="#9a7a3a" stroke-width="1.1" stroke-linecap="round"/>
+        <circle cx="18" cy="4" r="1.8" fill="#9a7a3a"/>
+      </svg>
+      <div class="ph-lbl">Delivery</div>
+    </div>
+
+    <div class="ph">
+      <div class="ph-n">vi</div>
+      <svg class="ph-ico" width="36" height="36" viewBox="0 0 36 36" fill="none">
+        <path d="M8 3 L8 33 L12 30 L16 33 L20 30 L24 33 L28 30 L28 3 Z" stroke="#9a7a3a" stroke-width="1.1" fill="none"/>
+        <line x1="12" y1="10" x2="24" y2="10" stroke="#9a7a3a" stroke-width=".8" opacity=".4"/>
+        <line x1="12" y1="15" x2="24" y2="15" stroke="#9a7a3a" stroke-width=".8" opacity=".4"/>
+        <line x1="12" y1="20" x2="20" y2="20" stroke="#9a7a3a" stroke-width=".8" opacity=".4"/>
+        <line x1="12" y1="25" x2="24" y2="25" stroke="#9a7a3a" stroke-width="1.1" opacity=".8"/>
+        <line x1="19" y1="28" x2="24" y2="28" stroke="#9a7a3a" stroke-width="1.1" opacity=".8"/>
+      </svg>
+      <div class="ph-lbl">Billing</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══ III. INITIAL FLOW ══ -->
+<section class="sec alt2">
+  <div class="sh">
+    <div class="sh-eyebrow">III</div>
+    <h2 class="sh-title"><em>Initial</em> Flow</h2>
+    <div class="sh-rule"></div>
+  </div>
+  <div class="cards3">
+    <div class="fcard">
+      <div class="fc-num">01 — Session Creation</div>
+      <div class="fc-title">Table Scan &<br>Session Birth</div>
+      <ul class="fc-list">
+        <li>Customer scans table QR code</li>
+        <li>Unique Session ID & Table ID assigned</li>
+        <li>Status set to Active with timestamp</li>
+        <li>Table status becomes Occupied</li>
+        <li>Order source recorded as QR</li>
+      </ul>
+    </div>
+    <div class="fcard">
+      <div class="fc-num">02 — Order Building</div>
+      <div class="fc-title">Cart Construction<br>& Validation</div>
+      <ul class="fc-list">
+        <li>Customer selects items, quantities & add-ons</li>
+        <li>Special instructions captured per item</li>
+        <li>Real-time inventory validation runs</li>
+        <li>Tax & service charges calculated</li>
+        <li>Cart held in session — kitchen uninvolved</li>
+      </ul>
+    </div>
+    <div class="fcard">
+      <div class="fc-num">03 — Decision Point</div>
+      <div class="fc-title">Payment<br>Decision</div>
+      <ul class="fc-list">
+        <li>Customer proceeds to payment</li>
+        <li>Final inventory lock runs</li>
+        <li>Order ID created, status → Pending</li>
+        <li>Stock temporarily reserved</li>
+        <li>Three distinct scenarios diverge here</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ══ IV. SCENARIOS ══ -->
+<section class="sec">
+  <div class="sh">
+    <div class="sh-eyebrow">IV</div>
+    <h2 class="sh-title">The Three <em>Payment Scenarios</em></h2>
+    <div class="sh-rule"></div>
+  </div>
+  <div class="sgrid">
+    <div class="scard">
+      <div class="sc-head">
+        <span class="sc-tag">Scenario I</span>
+        <div class="sc-title">Direct QR Online Payment</div>
+      </div>
+      <div class="sc-body">
+        <div class="sstep"><span class="ss-i">i</span><div class="ss-t"><strong>Customer pays via QR</strong><span>Fully self-service — no waiter required</span></div></div>
+        <div class="sstep"><span class="ss-i">ii</span><div class="ss-t"><strong>Gateway webhook confirmed</strong><span>Backend receives real-time verification</span></div></div>
+        <div class="sstep"><span class="ss-i">iii</span><div class="ss-t"><strong>Status → Paid</strong><span>Payment reference ID permanently stored</span></div></div>
+        <div class="sstep"><span class="ss-i">iv</span><div class="ss-t"><strong>Order enters kitchen queue</strong><span>Immediate — zero waiter involvement</span></div></div>
+      </div>
+    </div>
+    <div class="scard">
+      <div class="sc-head">
+        <span class="sc-tag">Scenario II</span>
+        <div class="sc-title">QR Order Exported to Waiter</div>
+      </div>
+      <div class="sc-body">
+        <div class="sstep"><span class="ss-i">i</span><div class="ss-t"><strong>Customer exports to waiter</strong><span>Bank issue or requests personal assistance</span></div></div>
+        <div class="sstep"><span class="ss-i">ii</span><div class="ss-t"><strong>Status → Awaiting Waiter</strong><span>Waiter app receives instant notification</span></div></div>
+        <div class="sstep"><span class="ss-i">iii·a</span><div class="ss-t"><strong>Option A — Online via Waiter</strong><span>Waiter shows QR → verified → kitchen</span></div></div>
+        <div class="sstep"><span class="ss-i">iii·b</span><div class="ss-t"><strong>Option B — Cash</strong><span>Cashier confirms → Status Paid → kitchen</span></div></div>
+      </div>
+    </div>
+    <div class="scard">
+      <div class="sc-head">
+        <span class="sc-tag">Scenario III</span>
+        <div class="sc-title">Full Waiter-Assisted Order</div>
+      </div>
+      <div class="sc-body">
+        <div class="sstep"><span class="ss-i">i</span><div class="ss-t"><strong>Waiter creates order</strong><span>Selects table, adds items & instructions</span></div></div>
+        <div class="sstep"><span class="ss-i">ii</span><div class="ss-t"><strong>Order ID generated</strong><span>Source tagged as Waiter Assisted</span></div></div>
+        <div class="sstep"><span class="ss-i">iii·a</span><div class="ss-t"><strong>Online — Waiter shows QR</strong><span>Customer pays → gateway verified → kitchen</span></div></div>
+        <div class="sstep"><span class="ss-i">iii·b</span><div class="ss-t"><strong>Cash — Cashier confirms</strong><span>Status → Paid → order enters kitchen</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ V. KITCHEN ══ -->
+<section class="sec alt">
+  <div class="sh">
+    <div class="sh-eyebrow">V</div>
+    <h2 class="sh-title">Kitchen <em>Lifecycle</em></h2>
+    <div class="sh-rule"></div>
+  </div>
+  <div class="klife">
+    <div class="ks">
+      <svg class="ks-ico" width="44" height="44" viewBox="0 0 44 44" fill="none">
+        <circle cx="22" cy="22" r="18" stroke="#2d5440" stroke-width="1.3" fill="none"/>
+        <polyline points="13,22 19,29 32,14" stroke="#2d5440" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="ks-name">Paid</div>
+      <div class="ks-desc">Order enters kitchen view</div>
+    </div>
+    <div class="ks">
+      <svg class="ks-ico" width="44" height="44" viewBox="0 0 44 44" fill="none">
+        <circle cx="22" cy="22" r="18" stroke="#2d5440" stroke-width="1.3" fill="none"/>
+        <path d="M22 10 L22 22 L30 30" stroke="#2d5440" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <div class="ks-name">Awaiting Prep</div>
+      <div class="ks-desc">Queued for chef assignment</div>
+    </div>
+    <div class="ks">
+      <svg class="ks-ico" width="44" height="44" viewBox="0 0 44 44" fill="none">
+        <path d="M22 5 C19 12 14 16 16 23 C17.5 28 22 32 22 32 C22 32 26.5 28 28 23 C30 16 25 12 22 5Z" stroke="#b85c38" stroke-width="1.3" fill="none"/>
+        <path d="M17 39 L27 39" stroke="#b85c38" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="19" y1="32" x2="19" y2="39" stroke="#b85c38" stroke-width="1.2" stroke-linecap="round"/>
+        <line x1="25" y1="32" x2="25" y2="39" stroke="#b85c38" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <div class="ks-name">Preparing</div>
+      <div class="ks-desc">Active cooking in progress</div>
+    </div>
+    <div class="ks">
+      <svg class="ks-ico" width="44" height="44" viewBox="0 0 44 44" fill="none">
+        <path d="M15 17 C15 9 29 9 29 17" stroke="#9a7a3a" stroke-width="1.3" fill="none"/>
+        <rect x="13" y="17" width="18" height="13" rx="1" stroke="#9a7a3a" stroke-width="1.3" fill="none"/>
+        <line x1="8" y1="34" x2="36" y2="34" stroke="#9a7a3a" stroke-width="1.6" stroke-linecap="round"/>
+        <line x1="22" y1="30" x2="22" y2="34" stroke="#9a7a3a" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <div class="ks-name">Ready</div>
+      <div class="ks-desc">Waiter & customer notified</div>
+    </div>
+    <div class="ks">
+      <svg class="ks-ico" width="44" height="44" viewBox="0 0 44 44" fill="none">
+        <path d="M5 32 C5 20 12 11 22 11 C32 11 39 20 39 32" stroke="#2d5440" stroke-width="1.3" fill="none"/>
+        <line x1="3" y1="32" x2="41" y2="32" stroke="#2d5440" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="22" y1="9" x2="22" y2="6" stroke="#2d5440" stroke-width="1.3" stroke-linecap="round"/>
+        <circle cx="22" cy="5" r="2" fill="#2d5440"/>
+      </svg>
+      <div class="ks-name">Served</div>
+      <div class="ks-desc">Delivered, timestamp logged</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ VI. AUTHORITY ══ -->
+<section class="sec alt2">
+  <div class="sh">
+    <div class="sh-eyebrow">VI</div>
+    <h2 class="sh-title">Payment <em>Authority Matrix</em></h2>
+    <div class="sh-rule"></div>
+  </div>
+  <div class="atable">
+    <div class="atr hdr">
+      <div class="atc">Role</div>
+      <div class="atc">Responsibility</div>
+      <div class="atc">Payment Authority</div>
+    </div>
+    <div class="atr">
+      <div class="atc">Payment Gateway</div>
+      <div class="atc" style="color:var(--muted)">Verifies all online transactions via real-time webhook</div>
+      <div class="atc"><span class="badge b-y">Authorised</span></div>
+    </div>
+    <div class="atr">
+      <div class="atc">Cashier</div>
+      <div class="atc" style="color:var(--muted)">Verifies and physically confirms all cash transactions</div>
+      <div class="atc"><span class="badge b-y">Authorised</span></div>
+    </div>
+    <div class="atr">
+      <div class="atc">Waiter</div>
+      <div class="atc" style="color:var(--muted)">Routes orders, assists customers, delivers food to table</div>
+      <div class="atc"><span class="badge b-n">Not Permitted</span></div>
+    </div>
+    <div class="atr">
+      <div class="atc">Kitchen</div>
+      <div class="atc" style="color:var(--muted)">Receives only confirmed paid orders — no exceptions</div>
+      <div class="atc"><span class="badge b-n">Passive Receiver</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ VII. BILLING ══ -->
+<section class="sec">
+  <div class="sh">
+    <div class="sh-eyebrow">VII</div>
+    <h2 class="sh-title">Auto <em>Bill Generation</em></h2>
+    <div class="sh-rule"></div>
+  </div>
+  <div class="bcenter">
+    <svg width="52" height="52" viewBox="0 0 52 52" fill="none" style="margin:0 auto 20px;display:block;opacity:.6">
+      <path d="M10 4 L10 48 L15 44 L20 48 L26 44 L32 48 L37 44 L42 48 L42 4 Z" stroke="#9a7a3a" stroke-width="1.2" fill="none"/>
+      <line x1="16" y1="13" x2="36" y2="13" stroke="#9a7a3a" stroke-width=".8" opacity=".5"/>
+      <line x1="16" y1="19" x2="36" y2="19" stroke="#9a7a3a" stroke-width=".8" opacity=".5"/>
+      <line x1="16" y1="25" x2="27" y2="25" stroke="#9a7a3a" stroke-width=".8" opacity=".5"/>
+      <line x1="16" y1="33" x2="36" y2="33" stroke="#9a7a3a" stroke-width="1.3" opacity=".9"/>
+      <line x1="28" y1="37" x2="36" y2="37" stroke="#9a7a3a" stroke-width="1.3" opacity=".9"/>
+    </svg>
+    <div class="bc-title">Digital Invoice</div>
+    <div class="bc-sub">Auto-generated immediately on payment confirmation — cashier not required for online payments</div>
+    <div class="bc-grid">
+      <div class="bc-item"><div class="bc-dot"></div><div class="bc-text">All items & add-ons listed</div></div>
+      <div class="bc-item"><div class="bc-dot"></div><div class="bc-text">Tax & service charge breakdown</div></div>
+      <div class="bc-item"><div class="bc-dot"></div><div class="bc-text">Payment method & reference ID</div></div>
+      <div class="bc-item"><div class="bc-dot"></div><div class="bc-text">Order, prep & served timestamps</div></div>
+    </div>
+    <div class="bc-ch">
+      <span class="bch">PDF Download</span>
+      <span class="bch">SMS</span>
+      <span class="bch">WhatsApp</span>
+      <span class="bch">Email</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══ VIII. CONFLICT ══ -->
+<section class="sec alt">
+  <div class="sh">
+    <div class="sh-eyebrow">VIII</div>
+    <h2 class="sh-title">Conflict <em>Prevention</em></h2>
+    <div class="sh-rule"></div>
+  </div>
+  <div class="cgrid">
+    <div class="ci"><div class="ci-chk">✓</div><div class="ci-txt">No unpaid order reaches the kitchen</div></div>
+    <div class="ci"><div class="ci-chk">✓</div><div class="ci-txt">No waiter can bypass the cashier</div></div>
+    <div class="ci"><div class="ci-chk">✓</div><div class="ci-txt">No duplicate order submission</div></div>
+    <div class="ci"><div class="ci-chk">✓</div><div class="ci-txt">No inventory oversell possible</div></div>
+    <div class="ci"><div class="ci-chk">✓</div><div class="ci-txt">No fake payment acceptance</div></div>
+    <div class="ci"><div class="ci-chk">✓</div><div class="ci-txt">No session overlap between guests</div></div>
+    <div class="ci"><div class="ci-chk">✓</div><div class="ci-txt">Clear audit log for every action</div></div>
+    <div class="ci"><div class="ci-chk">✓</div><div class="ci-txt">Payment gateway authority enforced</div></div>
+  </div>
+</section>
+
+<!-- ══ IX. SUMMARY ══ -->
+<section class="sec alt2">
+  <div class="sh">
+    <div class="sh-eyebrow">IX</div>
+    <h2 class="sh-title">Complete <em>Flow Summary</em></h2>
+    <div class="sh-rule"></div>
+  </div>
+  <div class="tl">
+    <div class="tli"><div class="tl-n">01</div><div class="tl-c"><div class="tl-t">Customer Scans QR</div><div class="tl-d">Session created, table marked occupied</div></div></div>
+    <div class="tli"><div class="tl-n">02</div><div class="tl-c"><div class="tl-t">Items Added to Cart</div><div class="tl-d">Inventory validated, total calculated with all taxes</div></div></div>
+    <div class="tli"><div class="tl-n">03</div><div class="tl-c"><div class="tl-t">Payment Decision Point</div><div class="tl-d">Order ID created, stock reserved — three scenarios branch</div></div></div>
+    <div class="tli"><div class="tl-n">04</div><div class="tl-c"><div class="tl-t">Scenario I — Direct Pay → Kitchen</div><div class="tl-d">Gateway verified → order dispatched to kitchen immediately</div></div></div>
+    <div class="tli"><div class="tl-n">05</div><div class="tl-c"><div class="tl-t">Scenario II — Export → Waiter → Confirm → Kitchen</div><div class="tl-d">Waiter handles online or cash; cashier or gateway confirms</div></div></div>
+    <div class="tli"><div class="tl-n">06</div><div class="tl-c"><div class="tl-t">Scenario III — Waiter Creates → Confirm → Kitchen</div><div class="tl-d">Fully assisted flow — same payment confirmation rules apply</div></div></div>
+    <div class="tli"><div class="tl-n">07</div><div class="tl-c"><div class="tl-t">Kitchen Prepares Order</div><div class="tl-d">Awaiting Prep → Preparing → Ready — waiter notified</div></div></div>
+    <div class="tli"><div class="tl-n">08</div><div class="tl-c"><div class="tl-t">Waiter Serves & Marks Delivered</div><div class="tl-d">Served timestamp and waiter ID written to audit trail</div></div></div>
+    <div class="tli"><div class="tl-n">09</div><div class="tl-c"><div class="tl-t">Bill Auto-Generated</div><div class="tl-d">Digital invoice dispatched via customer's preferred channel</div></div></div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div class="ft-brand">The <em>Restaurant</em><br>Management Engine</div>
+  <svg width="80" height="20" viewBox="0 0 80 20" fill="none">
+    <line x1="0" y1="10" x2="30" y2="10" stroke="rgba(255,255,255,.3)" stroke-width=".8"/>
+    <polygon points="40,3 44,10 40,17 36,10" stroke="rgba(255,255,255,.3)" stroke-width=".8" fill="none"/>
+    <line x1="50" y1="10" x2="80" y2="10" stroke="rgba(255,255,255,.3)" stroke-width=".8"/>
+  </svg>
+  <div class="ft-meta">Zero Conflict Architecture<br>Confidential Client Presentation</div>
+</footer>
+
+</body>
+</html>
